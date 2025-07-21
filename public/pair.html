@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>👑 Rahl Quantum – Pair Code</title>
+  <style>
+    body {
+      background: url('https://files.catbox.moe/c82aaa.jpg') no-repeat center center/cover;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+      margin: 0;
+    }
+
+    .box {
+      background: rgba(0,0,0,0.7);
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 25px #00ffff;
+    }
+
+    input {
+      padding: 12px;
+      width: 90%;
+      font-size: 16px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: #00ffff;
+      border: none;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #008080;
+      color: white;
+    }
+
+    #output {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    .glow {
+      font-size: 24px;
+      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2 class="glow">👑 Get Royal Pairing Code</h2>
+    <input type="number" id="phone" placeholder="Enter number with country code">
+    <button onclick="getCode()">Generate</button>
+    <div id="output">Your code will appear here.</div>
+  </div>
+
+  <script src="pair.js"></script>
+</body>
+</html>
