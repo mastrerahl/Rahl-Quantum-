@@ -1,84 +1,61 @@
+// router.js — Rahl Quantum using Gifted Baileys Pair Code
 const express = require("express");
 const { makeid } = require("./gen-id");
-const { create } = require("venom-bot");
+const {
+  default: makeWASocket,
+  useMultiFileAuthState,
+  makeCacheableSignalKeyStore,
+  delay,
+  Browsers,
+} = require("@whiskeysockets/baileys");
+const pino = require("pino");
+const fs = require("fs");
+const path = require("path");
+
 const router = express.Router();
-const sessions = {};
 
 router.get("/pair", async (req, res) => {
-  const number = req.query.number;
-  console.log(`📥 Request received for number: ${number}`);
-
+  const number = req.query.number?.replace(/[^0-9]/g, "");
   if (!number || number.length < 10) {
     return res.status(400).json({ error: "Invalid number" });
   }
 
-  const sessionId = `session/rahl-quantum-${makeid(4)}`;
-
-  if (sessions[number]) {
-    return res.json({
-      status: "active",
-      message: "Session already exists for this number.",
-    });
-  }
+  const sessionId = makeid(5);
+  const sessionDir = path.join(__dirname, "temp", sessionId);
+  const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
   try {
-    const client = await create({
-      session: sessionId,
-      multidevice: true,
-      headless: true,
-      browserArgs: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--disable-gpu",
-        "--no-zygote",
-        "--single-process",
-        "--no-first-run",
-        "--no-default-browser-check",
-        "--disable-features=site-per-process"
-      ],
-      puppeteerOptions: {
-        args: ['--no-sandbox'],
+    const sock = makeWASocket({
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
       },
+      printQRInTerminal: false,
+      browser: Browsers.macOS("Rahl Quantum"),
+      logger: pino({ level: "silent" }),
     });
 
-    sessions[number] = client;
-    let responded = false;
+    sock.ev.on("creds.update", saveCreds);
 
-    client.onStateChange(async (state) => {
-      console.log(`📡 State changed for ${number}: ${state}`);
+    if (!sock.authState.creds.registered) {
+      await delay(1500);
+      const code = await sock.requestPairingCode(number);
+      console.log(`🔑 Pairing code for ${number}: ${code}`);
 
-      if (state === "PAIRING" && !responded) {
-        responded = true;
-        try {
-          const code = await client.getPairingCode();
-          console.log(`🔑 Code for ${number}: ${code}`);
-          return res.json({
-            status: "pending",
-            pairingCode: code,
-            message: "Use this code in WhatsApp: Settings > Linked Devices",
-          });
-        } catch (err) {
-          console.error("❌ Code error:", err);
-          return res.status(500).json({
-            error: "Failed to generate code",
-            detail: err.message,
-          });
-        }
-      }
-    });
+      return res.json({
+        status: "pending",
+        pairingCode: code,
+        message: "Use this code in WhatsApp: Settings > Linked Devices",
+      });
+    }
 
-    setTimeout(() => {
-      if (!responded) {
-        responded = true;
-        res.status(408).json({ error: "Timeout: Pairing not reached" });
-      }
-    }, 30000); // Increased timeout to 30s
-
+    res.status(409).json({ error: "Already logged in" });
   } catch (err) {
-    console.error("❌ Initialization failed:", err);
-    res.status(500).json({ error: "Session failed", detail: err.message || "Unknown error" });
+    console.error("❌ Failed to pair:", err);
+    res.status(500).json({
+      error: "Session failed",
+      detail: err.message || "Unknown",
+    });
   }
 });
 
