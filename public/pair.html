@@ -3,113 +3,144 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>👑 Rahl Quantum - Royal Code</title>
+  <title>👑 Rahl Quantum Pair Code</title>
+  <link rel="stylesheet" href="css/all.min.css">
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      background: url('https://files.catbox.moe/c82aaa.jpg') no-repeat center center;
-      background-size: cover;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-image: url("/assets/rahl-quantum-royal.jpg"); /* 🔄 Royal Image */
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
     }
 
     .container {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      background-color: rgba(0, 0, 0, 0.5);
       padding: 30px;
+      border-radius: 15px;
       width: 90%;
       max-width: 400px;
-      box-shadow: 0 0 10px #00000050;
-      text-align: center;
+      box-shadow: 0 0 20px #8a2be2;
     }
 
     h1 {
-      color: gold;
-      margin-bottom: 15px;
+      font-size: 26px;
+      margin-bottom: 10px;
+      color: #e0b0ff;
+    }
+
+    p {
+      font-size: 14px;
+      margin: 10px 0;
+    }
+
+    .input-container {
+      display: flex;
+      margin-top: 20px;
+      border-radius: 10px;
+      overflow: hidden;
     }
 
     input {
-      padding: 10px;
-      width: 80%;
-      margin-bottom: 15px;
-      border-radius: 8px;
+      flex: 1;
+      padding: 12px;
       border: none;
+      outline: none;
       font-size: 16px;
+      color: #000;
     }
 
     button {
-      padding: 12px 25px;
+      background: linear-gradient(135deg, #8a2be2, #4b0082);
+      color: #fff;
       font-weight: bold;
-      background: royalblue;
-      color: white;
       border: none;
-      border-radius: 8px;
+      padding: 12px 20px;
       cursor: pointer;
-      font-size: 16px;
-      transition: 0.3s ease;
+      transition: 0.3s;
     }
 
     button:hover {
-      background: #291773;
+      background: linear-gradient(135deg, #32cd32, #228b22);
     }
 
-    #code {
-      margin-top: 20px;
-      color: white;
-      font-size: 20px;
+    .pair-code {
+      margin-top: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      color: gold;
+    }
+
+    .glow {
+      text-shadow: 0 0 10px #ffd700, 0 0 20px #ff69b4, 0 0 30px #8a2be2;
     }
 
     .footer {
       margin-top: 30px;
       font-size: 12px;
-      color: #ddd;
+      color: #aaa;
+    }
+
+    @media (max-width: 500px) {
+      .input-container {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🔱 Get Your Royal Session</h1>
-    <p style="color:white;">Enter your WhatsApp number with country code</p>
-    <input type="text" id="number" placeholder="e.g. 254112399557" />
-    <button onclick="getCode()">👑 Generate Code</button>
-    <div id="code"></div>
-    <div class="footer">👑 Powered by Rahl Quantum Intelligence</div>
+    <h1 class="glow">👑 Get Royal Pair Code</h1>
+    <p>Enter your WhatsApp number with country code (e.g., <b>254712345678</b>)</p>
+    
+    <div class="input-container">
+      <input id="number" type="tel" placeholder="254112399557" />
+      <button id="submit">Get Code</button>
+    </div>
+
+    <div id="output" class="pair-code"></div>
+
+    <div class="footer">Powered by ⚜️ Rahl Intelligence</div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    async function getCode() {
-      const number = document.getElementById("number").value.trim();
-      const codeBox = document.getElementById("code");
+    const submitBtn = document.getElementById("submit");
+    const output = document.getElementById("output");
 
+    submitBtn.addEventListener("click", async () => {
+      const number = document.getElementById("number").value.trim();
       if (!number || number.length < 10) {
-        return codeBox.innerHTML = "❌ Invalid number!";
+        output.innerHTML = "❌ Enter a valid number!";
+        return;
       }
 
-      codeBox.innerHTML = "⏳ Fetching royal code...";
+      output.innerHTML = "⏳ Generating your royal pairing code...";
 
       try {
-        const res = await fetch(`https://rahl-quantum.onrender.com/pair?number=${number}`);
-        const data = await res.json();
-
-        if (data.pairingCode) {
-          codeBox.innerHTML = `
-            <span style="color:lightgreen;font-weight:bold;">
-              ✅ Use this code in WhatsApp: <br>
-              <span style="font-size:24px;">${data.pairingCode}</span>
-            </span>
-          `;
+        const res = await axios.get(`/pair?number=${number}`);
+        if (res.data.pairingCode) {
+          output.innerHTML = `🔐 <span class="glow">Your Code:</span> <br><br> <span style="font-size:22px;">${res.data.pairingCode}</span><br><br>Use this in WhatsApp > Linked Devices`;
         } else {
-          codeBox.innerHTML = `❌ Error: ${data.error || "Unknown error"}`;
+          output.innerHTML = "⚠️ Could not get the code. Try again.";
         }
       } catch (err) {
-        codeBox.innerHTML = "❌ Server error. Try again.";
+        console.error(err);
+        output.innerHTML = "❌ Server error. Try again later.";
       }
-    }
+    });
   </script>
 </body>
 </html>
