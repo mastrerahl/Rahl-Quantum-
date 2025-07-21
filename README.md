@@ -1,6 +1,6 @@
 <!-- 👑 Royal Banner -->
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lordrahl2-sys/Rahl-Quantum/main/assets/rahl-quantum-lion.png" width="400px" alt="Rahl Quantum Royal Lion" />
+  <img src="https://raw.githubusercontent.com/lordrahl2-sys/Rahl-Quantum-/main/assets/rahl-quantum-lion.png" width="400px" alt="Rahl Quantum Royal Lion" />
 </p>
 
 <h1 align="center">
@@ -29,14 +29,14 @@
 
 ## 💬 About Rahl Quantum
 
-**Rahl Quantum** is the most powerful and stylish WhatsApp bot framework built with `venom-bot`, `baileys`, and royal-level modular architecture.
+**Rahl Quantum** is the most powerful and stylish WhatsApp bot framework forged in code and crowned in wisdom. Built with `venom-bot`, `baileys`, and pure royal elegance.
 
-- 🌟 Beautiful UI for pairing
-- ⚡ Fast, secure, & battle-tested
-- 🔒 Royal security powered by MEGA
-- 📦 Deployment-ready (Render, Railway, Heroku)
-- ✨ Fully themed, royal dark style
+- 🌟 Beautiful dark UI with pairing portal
+- ⚡ Fast, secure, and real-time bot engine
+- 🧠 AI-Ready & Modular
+- 🔒 Session handling via MEGA
+- 🧰 Deployable on Render, Railway, Vercel, and more
 
 ---
 
-## 📁 Folder Structure
+## 📁 Royal Folder Structure
