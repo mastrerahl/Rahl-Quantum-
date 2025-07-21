@@ -1,9 +1,6 @@
-// router.js — Rahl Quantum Royal Bot Backend
-
 const express = require("express");
 const { makeid } = require("./gen-id");
 const { create } = require("venom-bot");
-
 const router = express.Router();
 const sessions = {};
 
@@ -15,13 +12,12 @@ router.get("/pair", async (req, res) => {
     return res.status(400).json({ error: "Invalid number" });
   }
 
-  const sessionId = `rahl-${makeid(5)}`;
+  const sessionId = `session/rahl-quantum-${makeid(4)}`;
 
-  // Avoid duplicate sessions
   if (sessions[number]) {
     return res.json({
       status: "active",
-      message: "👑 Royal Session already exists for this number.",
+      message: "Session already exists for this number.",
     });
   }
 
@@ -34,62 +30,55 @@ router.get("/pair", async (req, res) => {
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
         "--disable-gpu",
         "--no-zygote",
         "--single-process",
-        "--disable-software-rasterizer",
         "--no-first-run",
         "--no-default-browser-check",
         "--disable-features=site-per-process"
       ],
       puppeteerOptions: {
-        executablePath: "/usr/bin/chromium", // Important for Render/Docker
-        args: ["--no-sandbox"]
-      }
+        args: ['--no-sandbox'],
+      },
     });
 
     sessions[number] = client;
-
     let responded = false;
 
     client.onStateChange(async (state) => {
-      console.log(`📡 Rahl State: ${state}`);
+      console.log(`📡 State changed for ${number}: ${state}`);
 
       if (state === "PAIRING" && !responded) {
+        responded = true;
         try {
           const code = await client.getPairingCode();
-          responded = true;
-          console.log(`🔐 Royal Pairing Code for ${number}: ${code}`);
+          console.log(`🔑 Code for ${number}: ${code}`);
           return res.json({
             status: "pending",
             pairingCode: code,
-            message: "📲 Enter this in WhatsApp: Settings → Linked Devices"
+            message: "Use this code in WhatsApp: Settings > Linked Devices",
           });
         } catch (err) {
-          responded = true;
-          console.error("❌ Failed to generate code:", err);
+          console.error("❌ Code error:", err);
           return res.status(500).json({
-            error: "Pairing failed",
-            detail: err.message || "Unknown error"
+            error: "Failed to generate code",
+            detail: err.message,
           });
         }
       }
     });
 
-    // ⏱ Royal Timeout Fallback
     setTimeout(() => {
       if (!responded) {
         responded = true;
-        res.status(408).json({ error: "⏳ Timeout: Pairing state not reached" });
+        res.status(408).json({ error: "Timeout: Pairing not reached" });
       }
-    }, 15000);
+    }, 30000); // Increased timeout to 30s
 
   } catch (err) {
-    console.error("❌ Session Error:", err);
-    return res.status(500).json({
-      error: "Session failed",
-      detail: err.message || "Unknown error"
-    });
+    console.error("❌ Initialization failed:", err);
+    res.status(500).json({ error: "Session failed", detail: err.message || "Unknown error" });
   }
 });
 
