@@ -1,4 +1,5 @@
-// router.js — Rahl Quantum using Gifted Baileys Pair Code
+// router.js — Rahl Quantum with Debug Logs 👑
+
 const express = require("express");
 const { makeid } = require("./gen-id");
 const {
@@ -16,15 +17,20 @@ const router = express.Router();
 
 router.get("/pair", async (req, res) => {
   const number = req.query.number?.replace(/[^0-9]/g, "");
+  console.log(`📥 Royal Request received for number: ${number || "undefined"}`);
+
   if (!number || number.length < 10) {
-    return res.status(400).json({ error: "Invalid number" });
+    console.warn("⚠️ Invalid or missing number format.");
+    return res.status(400).json({ error: "Invalid number format. Use format like 2547XXXXXXXX" });
   }
 
   const sessionId = makeid(5);
   const sessionDir = path.join(__dirname, "temp", sessionId);
-  const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+  console.log(`📂 Creating royal session folder: ${sessionDir}`);
 
   try {
+    const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+
     const sock = makeWASocket({
       auth: {
         creds: state.creds,
@@ -37,8 +43,10 @@ router.get("/pair", async (req, res) => {
 
     sock.ev.on("creds.update", saveCreds);
 
+    // Only send pairing code if not already registered
     if (!sock.authState.creds.registered) {
       await delay(1500);
+      console.log(`🧠 Not registered yet. Requesting code for ${number}...`);
       const code = await sock.requestPairingCode(number);
       console.log(`🔑 Pairing code for ${number}: ${code}`);
 
@@ -47,14 +55,15 @@ router.get("/pair", async (req, res) => {
         pairingCode: code,
         message: "Use this code in WhatsApp: Settings > Linked Devices",
       });
+    } else {
+      console.log(`⚠️ ${number} is already logged in.`);
+      return res.status(409).json({ error: "Already logged in." });
     }
-
-    res.status(409).json({ error: "Already logged in" });
   } catch (err) {
-    console.error("❌ Failed to pair:", err);
-    res.status(500).json({
+    console.error("❌ Royal Error during pairing:", err.message);
+    return res.status(500).json({
       error: "Session failed",
-      detail: err.message || "Unknown",
+      detail: err.message || "Unknown error",
     });
   }
 });
