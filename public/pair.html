@@ -1,73 +1,117 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>👑 Rahl Quantum – Pair Code</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👑 Rahl Quantum Session Panel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
-      background: url('https://files.catbox.moe/c82aaa.jpg') no-repeat center center/cover;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      color: #fff;
       margin: 0;
-    }
-
-    .box {
-      background: rgba(0,0,0,0.7);
-      padding: 30px;
-      border-radius: 10px;
-      text-align: center;
-      box-shadow: 0 0 25px #00ffff;
-    }
-
-    input {
-      padding: 12px;
-      width: 90%;
-      font-size: 16px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 5px;
-    }
-
-    button {
-      padding: 12px 20px;
-      background: #00ffff;
-      border: none;
-      font-weight: bold;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #008080;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #001f3f, #003366);
       color: white;
-    }
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }.panel {
+  background-color: rgba(0, 0, 51, 0.85);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
 
-    #output {
-      margin-top: 20px;
-      font-size: 18px;
-    }
+h2 {
+  color: #00ccff;
+  margin-bottom: 10px;
+}
 
-    .glow {
-      font-size: 24px;
-      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
-    }
+input[type="number"] {
+  padding: 10px;
+  width: 100%;
+  border: 2px solid #00ccff;
+  border-radius: 8px;
+  margin-top: 15px;
+  font-size: 1rem;
+  outline: none;
+  background-color: #e6f7ff;
+  color: #003366;
+}
+
+button {
+  margin-top: 20px;
+  padding: 12px;
+  width: 100%;
+  background: linear-gradient(45deg, #00ccff, #007acc);
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: linear-gradient(45deg, #007acc, #00ccff);
+}
+
+.code-box {
+  margin-top: 25px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #00ccff;
+  font-size: 1.2rem;
+  word-wrap: break-word;
+}
+
+.footer {
+  margin-top: 30px;
+  font-size: 0.9rem;
+  color: #99ccff;
+}
+
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2 class="glow">👑 Get Royal Pairing Code</h2>
-    <input type="number" id="phone" placeholder="Enter number with country code">
-    <button onclick="getCode()">Generate</button>
-    <div id="output">Your code will appear here.</div>
-  </div>
+  <div class="panel">
+    <h2>💫 Get Your Royal Session</h2>
+    <p>Enter your WhatsApp number with country code</p>
+    <input type="number" id="number" placeholder="e.g. 254712345678">
+    <button onclick="generateCode()">🔮 Generate Quantum Code</button><div id="result" class="code-box">Awaiting Royal Command...</div>
 
-  <script src="pair.js"></script>
-</body>
+<div class="footer">
+  Powered by <strong>RAHL Quantum 👑</strong>
+</div>
+
+  </div>  <script>
+    async function generateCode() {
+      const number = document.getElementById('number').value.trim();
+      const result = document.getElementById('result');
+
+      if (!number || number.length < 10) {
+        result.innerHTML = "❌ Enter a valid phone number.";
+        return;
+      }
+
+      result.innerHTML = "🔍 Generating...";
+
+      try {
+        const response = await fetch(`/pair?number=${number}`);
+        const data = await response.json();
+
+        if (data.pairingCode) {
+          result.innerHTML = `👑 <strong>CODE:</strong> ${data.pairingCode}<br>
+            <small>🔑 Use in WhatsApp > Settings > Linked Devices</small>`;
+        } else {
+          result.innerHTML = `❌ ${data.error || 'Failed to get code'}`;
+        }
+      } catch (err) {
+        result.innerHTML = "❌ Server Error. Try again later.";
+      }
+    }
+  </script></body>
 </html>
