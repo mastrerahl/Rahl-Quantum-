@@ -1,0 +1,14 @@
+# render.yaml — Rahl Quantum Royal Deploy Config
+services:
+  - type: web
+    name: rahl-quantum-backend
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    branch: main
+    rootDir: ./
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
