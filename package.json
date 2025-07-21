@@ -1,20 +1,17 @@
 {
   "name": "rahl-quantum-bot",
   "version": "1.0.0",
-  "description": "👑 Rahl Quantum — A Royal WhatsApp Bot powered by Venom",
+  "description": "👑 Rahl Quantum — A Royal WhatsApp Bot powered by Baileys",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "author": "Lord Rahl",
-  "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "fs-extra": "^11.1.1",
     "pino": "^8.14.2",
-    "venom-bot": "^5.0.2",
-    "puppeteer": "^21.3.8"
+    "@whiskeysockets/baileys": "^6.7.0"
   }
 }
