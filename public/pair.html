@@ -3,93 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>👑 Get Quantum Session</title>
+  <title>👑 Rahl Quantum — Royal Pairing Panel</title>
   <style>
     body {
-      margin: 0;
-      height: 100vh;
-      background: url("/assets/rahl-bg.jpg") no-repeat center center fixed;
-      background-size: cover;
-      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #0c0c1d, #1f2b4a);
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
-      align-items: center;
       justify-content: center;
-      color: white;
-      text-align: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
 
-    .panel {
+    .container {
       background-color: rgba(0, 0, 50, 0.6);
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 20px #8a2be2;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0, 0, 100, 0.5);
+      text-align: center;
       max-width: 350px;
+      width: 90%;
+    }
+
+    h1 {
+      font-size: 1.8em;
+      color: #00bfff;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 20px;
+      color: #d0d0ff;
     }
 
     input {
-      width: 90%;
-      padding: 10px;
-      margin: 1rem 0;
-      border-radius: 0.5rem;
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
       border: none;
-      font-size: 1rem;
+      border-radius: 8px;
+      font-size: 16px;
     }
 
     button {
-      background-color: #8a2be2;
+      width: 100%;
+      padding: 12px;
       border: none;
-      padding: 10px 20px;
-      border-radius: 0.5rem;
+      background: linear-gradient(to right, #007bff, #00bfff);
       color: white;
-      font-weight: bold;
-      font-size: 1rem;
+      font-size: 16px;
+      border-radius: 8px;
       cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
     }
 
     button:hover {
-      background-color: #6b1fb3;
+      background: linear-gradient(to right, #0051ff, #0099ff);
     }
 
-    #code {
-      margin-top: 1rem;
-      font-size: 1.2rem;
+    .response {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    .footer {
+      margin-top: 25px;
+      font-size: 0.8em;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <div class="panel">
-    <h2>🔱 Rahl Quantum Session</h2>
-    <p>Enter your phone number with country code:</p>
-    <input type="number" id="number" placeholder="e.g. 254712345678" />
-    <button onclick="getCode()">🔓 Get Code</button>
-    <div id="code"></div>
+  <div class="container">
+    <h1>🔱 Rahl Quantum</h1>
+    <p>Enter your WhatsApp number (with country code)</p>
+    <input id="number" type="tel" placeholder="+2547XXXXXXXXX" />
+    <button onclick="getCode()">👑 Get Royal Session Code</button>
+    <div id="output" class="response"></div>
+    <div class="footer">Powered by Lord Rahl 👑</div>
   </div>
 
   <script>
     async function getCode() {
-      const number = document.getElementById("number").value.trim();
-      const codeDiv = document.getElementById("code");
-
+      const output = document.getElementById('output');
+      const number = document.getElementById('number').value.trim();
       if (!number || number.length < 10) {
-        return (codeDiv.innerText = "⚠️ Invalid number");
+        output.innerHTML = "⚠️ Please enter a valid number.";
+        return;
       }
 
-      codeDiv.innerText = "🔍 Generating pairing code...";
+      output.innerHTML = "⏳ Requesting royal code...";
 
       try {
-        const response = await fetch(`/pair?number=${number}`);
-        const data = await response.json();
+        const res = await fetch(`/pair?number=${number}`);
+        const data = await res.json();
 
         if (data.pairingCode) {
-          codeDiv.innerHTML = `✅ Use this code in WhatsApp:<br><strong>${data.pairingCode}</strong><br><br>Go to WhatsApp ➡ Settings ➡ Linked Devices`;
-        } else if (data.message) {
-          codeDiv.innerText = data.message;
+          output.innerHTML = `
+            ✅ Pairing Code: <b>${data.pairingCode}</b><br>
+            ⚙️ Go to WhatsApp > Settings > Linked Devices to connect.
+          `;
+        } else if (data.error) {
+          output.innerHTML = `❌ ${data.error}`;
         } else {
-          codeDiv.innerText = "⚠️ Unknown response";
+          output.innerHTML = `⚠️ Unexpected response.`;
         }
-      } catch (error) {
-        codeDiv.innerText = "❌ Failed to connect to backend.";
-        console.error(error);
+      } catch (e) {
+        output.innerHTML = `❌ Server error. Try again later.`;
       }
     }
   </script>
