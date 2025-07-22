@@ -3,102 +3,93 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>👑 Rahl Quantum Pair Code</title>
-  <link rel="stylesheet" href="pair.css" />
+  <title>👑 Get Quantum Session</title>
   <style>
     body {
-      background-image: url("rahl-bg.jpg");
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      height: 100vh;
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      color: #fff;
+      height: 100vh;
+      background: url("/assets/rahl-bg.jpg") no-repeat center center fixed;
+      background-size: cover;
+      font-family: Arial, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
+      color: white;
       text-align: center;
     }
 
-    .box {
-      background-color: rgba(0, 0, 0, 0.6);
-      padding: 30px;
-      border-radius: 15px;
-      max-width: 400px;
-      width: 90%;
-    }
-
-    h1 {
-      font-size: 26px;
-      color: gold;
-      margin-bottom: 10px;
+    .panel {
+      background-color: rgba(0, 0, 50, 0.6);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 20px #8a2be2;
+      max-width: 350px;
     }
 
     input {
-      width: 80%;
+      width: 90%;
       padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
+      margin: 1rem 0;
+      border-radius: 0.5rem;
       border: none;
-      outline: none;
-      margin-top: 10px;
+      font-size: 1rem;
     }
 
     button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-weight: bold;
-      font-size: 16px;
-      background-color: royalblue;
-      color: white;
+      background-color: #8a2be2;
       border: none;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 0.5rem;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
       cursor: pointer;
     }
 
-    #pair {
-      margin-top: 20px;
-      font-size: 20px;
-      color: lightgreen;
-      word-break: break-word;
+    button:hover {
+      background-color: #6b1fb3;
+    }
+
+    #code {
+      margin-top: 1rem;
+      font-size: 1.2rem;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>👑 Rahl Quantum Session</h1>
-    <p>Enter your phone number (with country code):</p>
+  <div class="panel">
+    <h2>🔱 Rahl Quantum Session</h2>
+    <p>Enter your phone number with country code:</p>
     <input type="number" id="number" placeholder="e.g. 254712345678" />
-    <br />
-    <button onclick="getCode()">⚡ Get Royal Code</button>
-    <div id="pair"></div>
+    <button onclick="getCode()">🔓 Get Code</button>
+    <div id="code"></div>
   </div>
 
   <script>
     async function getCode() {
-      const input = document.getElementById("number");
-      const pairBox = document.getElementById("pair");
-      const number = input.value.trim();
+      const number = document.getElementById("number").value.trim();
+      const codeDiv = document.getElementById("code");
 
-      if (number.length < 10) {
-        pairBox.innerHTML = "❌ Invalid number format.";
-        return;
+      if (!number || number.length < 10) {
+        return (codeDiv.innerText = "⚠️ Invalid number");
       }
 
-      pairBox.innerHTML = "🔄 Generating your royal code...";
+      codeDiv.innerText = "🔍 Generating pairing code...";
+
       try {
-        const res = await fetch(`/pair?number=${number}`);
-        const data = await res.json();
+        const response = await fetch(`/pair?number=${number}`);
+        const data = await response.json();
 
         if (data.pairingCode) {
-          pairBox.innerHTML = `🔑 <strong>CODE:</strong> ${data.pairingCode}<br>🧭 Use this in WhatsApp ➤ <em>Settings > Linked Devices</em>`;
+          codeDiv.innerHTML = `✅ Use this code in WhatsApp:<br><strong>${data.pairingCode}</strong><br><br>Go to WhatsApp ➡ Settings ➡ Linked Devices`;
+        } else if (data.message) {
+          codeDiv.innerText = data.message;
         } else {
-          pairBox.innerHTML = `❌ ${data.error || "Failed to generate code."}`;
+          codeDiv.innerText = "⚠️ Unknown response";
         }
-      } catch (err) {
-        pairBox.innerHTML = "❌ Server error. Try again.";
+      } catch (error) {
+        codeDiv.innerText = "❌ Failed to connect to backend.";
+        console.error(error);
       }
     }
   </script>
