@@ -1,23 +1,15 @@
-// server.js — Rahl Quantum Royal Backend
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const app = express();
+
 const router = require("./router");
 
 app.use(cors());
-app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+app.use(router);
 
-// ✅ This serves all static files like /pair.html, /assets/rahl-bg.jpg, etc
-app.use(express.static("public"));
-
-// 💬 Your main router
-app.use("/", router);
-
-app.get("/", (req, res) => {
-  res.send("👑 Rahl Quantum Royal Backend is online.");
-});
-
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`👑 Royal Backend Live at http://localhost:${PORT}`);
+  console.log(`🚀 Server is live on port ${PORT}`);
 });
