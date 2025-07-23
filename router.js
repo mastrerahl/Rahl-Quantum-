@@ -1,4 +1,4 @@
-// router.js — Rahl Quantum Baileys Pairing (Fixed & Clean)
+// router.js — Rahl Quantum Baileys Pairing
 const express = require("express");
 const { makeid } = require("./gen-id");
 const {
@@ -24,9 +24,9 @@ router.get("/pair", async (req, res) => {
   const sessionId = makeid(5);
   const sessionDir = path.join(__dirname, "temp", sessionId);
 
-  // ✅ Optional Cleanup
+  // Clean up the folder first to prevent corrupted or stale sessions
   if (fs.existsSync(sessionDir)) {
-    fs.rmSync(sessionDir, { recursive: true });
+    fs.rmSync(sessionDir, { recursive: true, force: true });
   }
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
@@ -49,31 +49,30 @@ router.get("/pair", async (req, res) => {
       if (connection === "close") {
         const code = lastDisconnect?.error?.output?.statusCode;
         if (code !== DisconnectReason.loggedOut) {
-          console.log("🔁 Reconnecting...");
+          console.log("🔁 Connection closed, trying to reconnect...");
         } else {
-          console.log("❌ Logged out");
+          console.log("❌ Logged out of WhatsApp");
         }
       } else if (connection === "open") {
-        console.log("✅ Connected to WhatsApp");
+        console.log("✅ WhatsApp connected successfully!");
       }
     });
 
     if (!sock.authState.creds.registered) {
       await delay(2000);
       const code = await sock.requestPairingCode(number);
-      console.log(`🔑 Code for ${number}: ${code}`);
+      console.log(`🔑 Pairing code for ${number}: ${code}`);
 
       return res.json({
         status: "pending",
         pairingCode: code,
-        message: "Use in WhatsApp > Linked Devices",
+        message: "Paste this code in WhatsApp > Linked Devices",
       });
     }
 
-    res.status(409).json({ error: "Already linked" });
-
+    res.status(409).json({ error: "Already logged in" });
   } catch (err) {
-    console.error("❌ Pairing error:", err);
+    console.error("❌ Error generating code:", err);
     res.status(500).json({ error: "Session failed", detail: err.message });
   }
 });
