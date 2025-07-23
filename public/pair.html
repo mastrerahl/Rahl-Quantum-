@@ -1,84 +1,85 @@
-<!-- public/pair.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>👑 Get Royal Pair Code</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>👑 Get Royal Session — Rahl Quantum</title>
   <style>
     body {
-      font-family: 'Inter', sans-serif;
-      background: #0b1444;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("assets/rahl-bg.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-align: center;
+    }
+    .overlay {
+      background: rgba(0, 0, 50, 0.7);
+      padding: 2rem;
       min-height: 100vh;
-      padding: 20px;
     }
     .panel {
-      background: #142e73;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.6);
-      width: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 10px;
+      margin: auto;
       max-width: 400px;
     }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      margin-top: 15px;
-      font-size: 16px;
-    }
     input {
-      background: #eaeaea;
-      color: black;
+      padding: 10px;
+      border: none;
+      width: 80%;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      border-radius: 5px;
     }
     button {
-      background: #00b4ff;
+      padding: 10px 20px;
+      background-color: royalblue;
       color: white;
-      font-weight: bold;
+      border: none;
+      font-size: 1rem;
+      border-radius: 5px;
       cursor: pointer;
     }
-    .output {
-      margin-top: 20px;
-      background: #071f44;
-      padding: 15px;
+    .result {
+      margin-top: 1rem;
+      font-size: 1rem;
+      background: #00000088;
+      padding: 1rem;
       border-radius: 10px;
-      font-family: monospace;
-      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <div class="panel">
-    <h2>🔱 Rahl Quantum Pair Panel</h2>
-    <input type="text" id="number" placeholder="Enter your WhatsApp number" />
-    <button onclick="getPair()">Get Royal Session</button>
-    <div id="output" class="output" style="display:none;"></div>
+  <div class="overlay">
+    <div class="panel">
+      <h1>🔱 Rahl Quantum Session</h1>
+      <input type="text" id="number" placeholder="Enter WhatsApp Number" />
+      <br />
+      <button onclick="getCode()">👑 Get Royal Code</button>
+      <div class="result" id="result"></div>
+    </div>
   </div>
 
   <script>
-    async function getPair() {
-      const number = document.getElementById('number').value;
-      const output = document.getElementById('output');
-      output.style.display = 'block';
-      output.innerText = '👑 Requesting pairing code...';
+    async function getCode() {
+      const number = document.getElementById("number").value;
+      const resultBox = document.getElementById("result");
+
+      resultBox.innerHTML = "⌛ Requesting Royal Code...";
 
       try {
-        const res = await fetch(`/pair?number=${number}`);
+        const res = await fetch("https://your-backend-url.onrender.com/pair?number=" + number);
         const data = await res.json();
+
         if (data.pairingCode) {
-          output.innerHTML = `✅ <b>Pairing Code:</b> ${data.pairingCode}<br>
-          <i>Use it in WhatsApp: Settings → Linked Devices</i>`;
+          resultBox.innerHTML = `🔑 Use this code in WhatsApp:<br><strong>${data.pairingCode}</strong>`;
         } else {
-          output.innerText = data.error || 'Unknown error';
+          resultBox.innerHTML = `❌ Error: ${data.error || "Unknown"}`;
         }
       } catch (err) {
-        output.innerText = '❌ Failed to fetch pair code.';
+        resultBox.innerHTML = "❌ Network error, please try again.";
       }
     }
   </script>
