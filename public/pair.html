@@ -1,85 +1,88 @@
+<!-- /public/pair.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>👑 Get Royal Session — Rahl Quantum</title>
+  <title>👑 Get Royal Session</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: url("assets/rahl-bg.jpg") no-repeat center center fixed;
+      padding: 0;
+      background: url("/assets/rahl-bg.jpg") no-repeat center center fixed;
       background-size: cover;
-      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
       text-align: center;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      backdrop-filter: brightness(0.5);
     }
-    .overlay {
-      background: rgba(0, 0, 50, 0.7);
-      padding: 2rem;
-      min-height: 100vh;
+
+    h1 {
+      font-size: 3rem;
+      color: royalblue;
+      text-shadow: 2px 2px 4px black;
     }
-    .panel {
-      background-color: rgba(255, 255, 255, 0.1);
-      padding: 2rem;
-      border-radius: 10px;
-      margin: auto;
-      max-width: 400px;
-    }
+
     input {
       padding: 10px;
       border: none;
-      width: 80%;
-      margin-bottom: 1rem;
-      font-size: 1rem;
       border-radius: 5px;
+      margin: 10px;
+      font-size: 16px;
+      width: 200px;
     }
+
     button {
       padding: 10px 20px;
-      background-color: royalblue;
+      background: royalblue;
       color: white;
       border: none;
-      font-size: 1rem;
+      font-size: 16px;
       border-radius: 5px;
       cursor: pointer;
     }
-    .result {
-      margin-top: 1rem;
-      font-size: 1rem;
-      background: #00000088;
-      padding: 1rem;
-      border-radius: 10px;
+
+    button:hover {
+      background: #003399;
+    }
+
+    #output {
+      margin-top: 20px;
+      background: rgba(0, 0, 50, 0.7);
+      padding: 10px;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
-  <div class="overlay">
-    <div class="panel">
-      <h1>🔱 Rahl Quantum Session</h1>
-      <input type="text" id="number" placeholder="Enter WhatsApp Number" />
-      <br />
-      <button onclick="getCode()">👑 Get Royal Code</button>
-      <div class="result" id="result"></div>
-    </div>
-  </div>
+  <h1>🔱 Get Your Royal Session</h1>
+  <input type="text" id="number" placeholder="Enter phone number" />
+  <button onclick="getCode()">Get Royal Code</button>
+  <div id="output"></div>
 
   <script>
     async function getCode() {
       const number = document.getElementById("number").value;
-      const resultBox = document.getElementById("result");
-
-      resultBox.innerHTML = "⌛ Requesting Royal Code...";
+      const output = document.getElementById("output");
+      output.innerHTML = "⏳ Requesting Royal Code...";
 
       try {
-        const res = await fetch("https://your-backend-url.onrender.com/pair?number=" + number);
-        const data = await res.json();
-
+        const response = await fetch(`/pair?number=${number}`);
+        const data = await response.json();
         if (data.pairingCode) {
-          resultBox.innerHTML = `🔑 Use this code in WhatsApp:<br><strong>${data.pairingCode}</strong>`;
+          output.innerHTML = `
+            <p>🔑 <strong>Pairing Code:</strong> ${data.pairingCode}</p>
+            <p>📲 Open WhatsApp > Linked Devices > Use the code</p>
+          `;
         } else {
-          resultBox.innerHTML = `❌ Error: ${data.error || "Unknown"}`;
+          output.innerHTML = `❌ ${data.error || "Failed to fetch code."}`;
         }
       } catch (err) {
-        resultBox.innerHTML = "❌ Network error, please try again.";
+        output.innerHTML = "🚨 Network error. Please try again.";
       }
     }
   </script>
