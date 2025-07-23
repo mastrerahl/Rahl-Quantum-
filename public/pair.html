@@ -1,97 +1,98 @@
+<!-- /public/pair.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🔱 Get Royal Session</title>
+  <title>👑 Get Royal Session</title>
   <style>
     body {
       margin: 0;
       padding: 0;
+      background: url("https://images.unsplash.com/photo-1611095973518-c4947c77f1ee?auto=format&fit=crop&w=1950&q=80") no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      text-align: center;
       height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: center;
-      background: linear-gradient(to bottom right, #000428, #004e92);
-      font-family: 'Segoe UI', sans-serif;
-      color: #fff;
-      text-align: center;
+      backdrop-filter: brightness(0.4);
     }
 
     h1 {
-      font-size: 2.8rem;
-      margin-bottom: 10px;
-      color: #ffffff;
-      text-shadow: 0 0 10px royalblue, 0 0 5px black;
-    }
-
-    .trident {
-      font-size: 5rem;
-      margin-bottom: 5px;
-      filter: drop-shadow(0 0 5px #00f);
+      font-size: 3rem;
+      color: royalblue;
+      text-shadow: 2px 2px 4px black;
     }
 
     input {
-      padding: 12px;
+      padding: 10px;
       border: none;
       border-radius: 5px;
+      margin: 10px;
       font-size: 16px;
-      width: 260px;
-      margin-bottom: 15px;
+      width: 250px;
+      text-align: center;
     }
 
     button {
-      padding: 12px 24px;
-      background: #005eff;
+      padding: 10px 25px;
+      background: royalblue;
       color: white;
-      font-size: 16px;
       border: none;
+      font-size: 16px;
       border-radius: 5px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
 
     button:hover {
-      background: #003eb3;
+      background: #003399;
     }
 
     #output {
       margin-top: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 12px;
+      background: rgba(0, 0, 50, 0.7);
+      padding: 15px;
       border-radius: 8px;
-      width: 90%;
-      max-width: 320px;
+      max-width: 90%;
+      margin-left: auto;
+      margin-right: auto;
     }
+
+    p {
+      font-size: 18px;
+      margin: 8px 0;
+    }
+
   </style>
 </head>
 <body>
-  <div class="trident">🔱</div>
-  <h1>Get Your Royal Session</h1>
-  <input type="text" id="number" placeholder="Enter WhatsApp number e.g. 2547xxxxxxx" />
+  <h1>🔱 Get Your Royal Session</h1>
+  <input type="text" id="number" placeholder="Enter phone number e.g. 2547XXXXXXXX" />
   <button onclick="getCode()">Get Royal Code</button>
   <div id="output"></div>
 
   <script>
     async function getCode() {
-      const number = document.getElementById("number").value.trim();
+      const number = document.getElementById("number").value;
       const output = document.getElementById("output");
       output.innerHTML = "⏳ Requesting Royal Code...";
 
       try {
-        const res = await fetch(`/pair?number=${number}`);
-        const data = await res.json();
+        const response = await fetch(`/pair?number=${number}`);
+        const data = await response.json();
         if (data.pairingCode) {
           output.innerHTML = `
-            <p>🔐 <strong>Pairing Code:</strong> ${data.pairingCode}</p>
-            <p>📱 Go to WhatsApp > Linked Devices > Use Code</p>
+            <p>🔑 <strong>Pairing Code:</strong> ${data.pairingCode}</p>
+            <p>📲 Open WhatsApp > Linked Devices > Use the code above</p>
           `;
         } else {
           output.innerHTML = `❌ ${data.error || "Failed to fetch code."}`;
         }
-      } catch (e) {
-        output.innerHTML = "🚨 Network error. Try again.";
+      } catch (err) {
+        output.innerHTML = "🚨 Network error. Please try again.";
       }
     }
   </script>
