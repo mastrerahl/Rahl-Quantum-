@@ -10,6 +10,7 @@ const {
 const pino = require("pino");
 const fs = require("fs");
 const path = require("path");
+// const { Boom } = require("@hapi/boom"); // Optional
 
 const router = express.Router();
 
@@ -21,6 +22,12 @@ router.get("/pair", async (req, res) => {
 
   const sessionId = makeid(5);
   const sessionDir = path.join(__dirname, "session", sessionId);
+
+  // ✅ Ensure the session directory exists
+  if (!fs.existsSync(sessionDir)) {
+    fs.mkdirSync(sessionDir, { recursive: true });
+  }
+
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
   try {
@@ -30,7 +37,7 @@ router.get("/pair", async (req, res) => {
         keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
       },
       printQRInTerminal: false,
-      browser: Browsers.ubuntu("Chrome"), // ✅ recommended
+      browser: Browsers.ubuntu("Chrome"), // ✅ Recommended
       logger: pino({ level: "silent" }),
     });
 
@@ -41,16 +48,22 @@ router.get("/pair", async (req, res) => {
       const code = await sock.requestPairingCode(number);
       console.log(`🔑 Pairing code for ${number}: ${code}`);
 
-      return res.json({
+      // ✅ Send response to frontend
+      res.json({
         status: "pending",
         pairingCode: code,
         message: "Use this code in WhatsApp: Settings > Linked Devices",
       });
+
+      // ✅ Keep socket alive for 30 seconds to allow linking
+      await delay(30000);
+      console.log("⏹ Done waiting. You can close the socket if needed.");
+      return;
     } else {
       res.status(409).json({ error: "Already linked" });
     }
 
-    // ✅ Extra: show WhatsApp connection status
+    // ✅ Optional: Log all connection changes
     sock.ev.on("connection.update", (update) => {
       console.log("📡 Connection update:", update);
     });
