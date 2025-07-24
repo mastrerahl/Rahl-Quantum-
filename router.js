@@ -6,11 +6,11 @@ const {
   makeCacheableSignalKeyStore,
   delay,
   Browsers,
+  DisconnectReason,
 } = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const fs = require("fs");
 const path = require("path");
-// const { Boom } = require("@hapi/boom"); // Optional
 
 const router = express.Router();
 
@@ -22,12 +22,6 @@ router.get("/pair", async (req, res) => {
 
   const sessionId = makeid(5);
   const sessionDir = path.join(__dirname, "session", sessionId);
-
-  // ✅ Ensure the session directory exists
-  if (!fs.existsSync(sessionDir)) {
-    fs.mkdirSync(sessionDir, { recursive: true });
-  }
-
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
   try {
@@ -37,42 +31,55 @@ router.get("/pair", async (req, res) => {
         keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
       },
       printQRInTerminal: false,
-      browser: Browsers.ubuntu("Chrome"), // ✅ Recommended
+      browser: Browsers.ubuntu("Chrome"),
       logger: pino({ level: "silent" }),
     });
 
+    // Save session credentials
     sock.ev.on("creds.update", saveCreds);
 
+    // 👇 Listen for connection updates
+    sock.ev.on("connection.update", (update) => {
+      const { connection, lastDisconnect } = update;
+
+      if (connection === "open") {
+        console.log(`✅ Rahl Quantum linked successfully for ${number}`);
+        // Optional: Save something to indicate success
+        fs.writeFileSync(
+          path.join(sessionDir, "linked.txt"),
+          `Linked successfully at ${new Date().toISOString()}`
+        );
+      }
+
+      if (connection === "close") {
+        const reason = lastDisconnect?.error?.output?.statusCode;
+        if (reason === DisconnectReason.loggedOut) {
+          console.log("❌ Logged out");
+        } else {
+          console.log("⚠️ Connection closed, retrying...");
+        }
+      }
+    });
+
+    // Send pairing code
     if (!sock.authState.creds.registered) {
       await delay(1500);
       const code = await sock.requestPairingCode(number);
       console.log(`🔑 Pairing code for ${number}: ${code}`);
 
-      // ✅ Send response to frontend
-      res.json({
+      return res.json({
         status: "pending",
         pairingCode: code,
-        message: "Use this code in WhatsApp: Settings > Linked Devices",
+        message: "Paste this code in WhatsApp > Linked Devices",
       });
-
-      // ✅ Keep socket alive for 30 seconds to allow linking
-      await delay(30000);
-      console.log("⏹ Done waiting. You can close the socket if needed.");
-      return;
     } else {
       res.status(409).json({ error: "Already linked" });
     }
-
-    // ✅ Optional: Log all connection changes
-    sock.ev.on("connection.update", (update) => {
-      console.log("📡 Connection update:", update);
-    });
-
   } catch (err) {
     console.error("❌ Failed to pair:", err);
     res.status(500).json({
       error: "Session failed",
-      detail: err.message || "Unknown",
+      detail: err.message || "Unknown error",
     });
   }
 });
