@@ -1,3 +1,4 @@
+// router.js — Lord Rahl Session Generator
 const express = require("express");
 const { makeid } = require("./gen-id");
 const {
@@ -6,7 +7,6 @@ const {
   makeCacheableSignalKeyStore,
   delay,
   Browsers,
-  DisconnectReason,
 } = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const fs = require("fs");
@@ -20,7 +20,7 @@ router.get("/pair", async (req, res) => {
     return res.status(400).json({ error: "Invalid number" });
   }
 
-  const sessionId = makeid(5);
+  const sessionId = makeid(5); // e.g. "H1zGp"
   const sessionDir = path.join(__dirname, "session", sessionId);
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
@@ -35,33 +35,36 @@ router.get("/pair", async (req, res) => {
       logger: pino({ level: "silent" }),
     });
 
-    // Save session credentials
     sock.ev.on("creds.update", saveCreds);
 
-    // 👇 Listen for connection updates
-    sock.ev.on("connection.update", (update) => {
-      const { connection, lastDisconnect } = update;
+    sock.ev.on("connection.update", async (update) => {
+      if (update.connection === "open") {
+        // ✅ Session created successfully
+        const sessionData = {
+          creds: state.creds,
+          keys: state.keys,
+        };
 
-      if (connection === "open") {
-        console.log(`✅ Rahl Quantum linked successfully for ${number}`);
-        // Optional: Save something to indicate success
-        fs.writeFileSync(
-          path.join(sessionDir, "linked.txt"),
-          `Linked successfully at ${new Date().toISOString()}`
-        );
-      }
+        // 📦 Convert session to base64 string
+        const sessionString = Buffer.from(JSON.stringify(sessionData)).toString("base64");
 
-      if (connection === "close") {
-        const reason = lastDisconnect?.error?.output?.statusCode;
-        if (reason === DisconnectReason.loggedOut) {
-          console.log("❌ Logged out");
-        } else {
-          console.log("⚠️ Connection closed, retrying...");
-        }
+        // 📛 Format session as LORD-RAHL style
+        const finalSession = `LORD-RAHL~${sessionId}#${sessionString}`;
+
+        // 💾 Save session to file (optional)
+        const sessionFilePath = path.join(__dirname, "session", `${sessionId}.txt`);
+        fs.writeFileSync(sessionFilePath, finalSession);
+
+        console.log("✅ LORD-RAHL session created.");
+        return res.json({
+          status: "connected",
+          session: finalSession,
+          message: "Paste this session to your bot env",
+        });
       }
     });
 
-    // Send pairing code
+    // 🔐 Request pairing code
     if (!sock.authState.creds.registered) {
       await delay(1500);
       const code = await sock.requestPairingCode(number);
@@ -70,16 +73,16 @@ router.get("/pair", async (req, res) => {
       return res.json({
         status: "pending",
         pairingCode: code,
-        message: "Paste this code in WhatsApp > Linked Devices",
+        message: "Use this code in WhatsApp: Settings > Linked Devices",
       });
     } else {
-      res.status(409).json({ error: "Already linked" });
+      return res.status(409).json({ error: "Already linked" });
     }
   } catch (err) {
     console.error("❌ Failed to pair:", err);
     res.status(500).json({
       error: "Session failed",
-      detail: err.message || "Unknown error",
+      detail: err.message || "Unknown",
     });
   }
 });
