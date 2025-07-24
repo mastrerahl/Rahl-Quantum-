@@ -1,0 +1,66 @@
+<!-- public/save-bot.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🤖 Name Your Bot</title>
+  <style>
+    body {
+      background: #001F3F;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background: royalblue;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔐 Your Bot is Ready</h2>
+  <p>Name your bot and click save to complete setup</p>
+  <input type="text" id="botName" placeholder="Enter bot name (e.g. Lord Rahl)" />
+  <button onclick="saveBot()">💾 Save Bot</button>
+  <div id="status"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("sessionId");
+
+    async function saveBot() {
+      const name = document.getElementById("botName").value;
+      const status = document.getElementById("status");
+
+      if (!name) {
+        status.textContent = "❌ Please enter a bot name";
+        return;
+      }
+
+      // Save to Firestore or local API if needed
+      status.textContent = "⏳ Saving bot name...";
+
+      // Optional: Post to a /save endpoint
+      await fetch(`/save-bot-name`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, sessionId }),
+      });
+
+      status.textContent = "✅ Session generated. Check your DM!";
+    }
+  </script>
+</body>
+</html>
