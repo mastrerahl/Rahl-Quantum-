@@ -1,3 +1,18 @@
+const express = require("express");
+const { makeid } = require("./gen-id");
+const {
+  default: makeWASocket,
+  useMultiFileAuthState,
+  makeCacheableSignalKeyStore,
+  delay,
+  Browsers,
+} = require("@whiskeysockets/baileys");
+const pino = require("pino");
+const fs = require("fs");
+const path = require("path");
+
+const router = express.Router();
+
 router.get("/pair", async (req, res) => {
   const number = req.query.number?.replace(/[^0-9]/g, "");
   if (!number || number.length < 10) {
@@ -21,59 +36,50 @@ router.get("/pair", async (req, res) => {
 
     sock.ev.on("creds.update", saveCreds);
 
-    // 🛑 STEP 1: Check if already linked
-    if (sock.authState.creds.registered) {
-      return res.status(409).json({ error: "Already linked" });
-    }
+    let sessionSent = false;
 
-    // ✅ STEP 2: Generate pairing code FIRST
-    const code = await sock.requestPairingCode(number);
-    if (!code) {
-      throw new Error("Pairing code not generated");
-    }
+    sock.ev.on("connection.update", async (update) => {
+      const { connection } = update;
 
-    console.log(`🔑 Pairing code for ${number}: ${code}`);
+      if (connection === "open" && !sessionSent) {
+        sessionSent = true;
+        const sessionData = {
+          creds: state.creds,
+          keys: state.keys,
+        };
 
-    // 🔄 STEP 3: Now wait for connection to complete
-    const session = await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("⏰ Timeout waiting for WhatsApp connection"));
-      }, 30000); // wait max 30 sec
+        const sessionString = Buffer.from(JSON.stringify(sessionData)).toString("base64");
+        const finalSession = `LORD-RAHL~${sessionId}#${sessionString}`;
 
-      sock.ev.on("connection.update", (update) => {
-        if (update.connection === "open") {
-          clearTimeout(timeout);
+        const sessionPath = path.join(__dirname, "session", `${sessionId}.txt`);
+        fs.writeFileSync(sessionPath, finalSession);
 
-          const sessionData = {
-            creds: state.creds,
-            keys: state.keys,
-          };
-
-          const sessionString = Buffer.from(JSON.stringify(sessionData)).toString("base64");
-          const finalSession = `LORD-RAHL~${sessionId}#${sessionString}`;
-
-          const sessionFilePath = path.join(__dirname, "session", `${sessionId}.txt`);
-          fs.writeFileSync(sessionFilePath, finalSession);
-
-          console.log("✅ LORD-RAHL session created!");
-          resolve({
-            status: "connected",
-            pairingCode: code,
-            session: finalSession,
-            message: "Paste this session into your bot env",
-          });
-        }
-      });
+        console.log("✅ Session Created!");
+        res.json({
+          status: "connected",
+          session: finalSession,
+          message: "✅ Paste this session in your bot config",
+        });
+      }
     });
 
-    // 🔚 STEP 4: Respond with both code and session
-    return res.json(session);
+    if (!sock.authState.creds.registered) {
+      await delay(2000);
+      const code = await sock.requestPairingCode(number);
+      console.log(`🔑 Pairing code for ${number}: ${code}`);
 
+      res.json({
+        status: "pending",
+        pairingCode: code,
+        message: "Open WhatsApp > Linked Devices > Enter code",
+      });
+    } else {
+      res.status(409).json({ error: "Already linked" });
+    }
   } catch (err) {
     console.error("❌ Error:", err);
-    return res.status(500).json({
-      error: "Session failed",
-      detail: err.message || "Unknown error",
-    });
+    res.status(500).json({ error: "Session failed", detail: err.message });
   }
 });
+
+module.exports = router;
