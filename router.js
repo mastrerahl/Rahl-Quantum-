@@ -1,3 +1,4 @@
+// router.js — Lord Rahl Session Generator using temp directory
 const express = require("express");
 const { makeid } = require("./gen-id");
 const {
@@ -19,8 +20,8 @@ router.get("/pair", async (req, res) => {
     return res.status(400).json({ error: "Invalid number" });
   }
 
-  const sessionId = makeid(5);
-  const sessionDir = path.join(__dirname, "session", sessionId);
+  const sessionId = makeid(5); // e.g. "H1zGp"
+  const sessionDir = path.join(__dirname, "temp", sessionId); // ✅ uses temp
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
   try {
@@ -36,13 +37,8 @@ router.get("/pair", async (req, res) => {
 
     sock.ev.on("creds.update", saveCreds);
 
-    let sessionSent = false;
-
     sock.ev.on("connection.update", async (update) => {
-      const { connection } = update;
-
-      if (connection === "open" && !sessionSent) {
-        sessionSent = true;
+      if (update.connection === "open") {
         const sessionData = {
           creds: state.creds,
           keys: state.keys,
@@ -50,35 +46,38 @@ router.get("/pair", async (req, res) => {
 
         const sessionString = Buffer.from(JSON.stringify(sessionData)).toString("base64");
         const finalSession = `LORD-RAHL~${sessionId}#${sessionString}`;
+        const sessionFilePath = path.join(__dirname, "temp", `${sessionId}.txt`); // ✅ also saves in temp
+        fs.writeFileSync(sessionFilePath, finalSession);
 
-        const sessionPath = path.join(__dirname, "session", `${sessionId}.txt`);
-        fs.writeFileSync(sessionPath, finalSession);
-
-        console.log("✅ Session Created!");
-        res.json({
+        console.log("✅ LORD-RAHL session created.");
+        return res.json({
           status: "connected",
           session: finalSession,
-          message: "✅ Paste this session in your bot config",
+          message: "Paste this session to your bot env",
         });
       }
     });
 
+    // 🔐 Request pairing code
     if (!sock.authState.creds.registered) {
-      await delay(2000);
+      await delay(1500);
       const code = await sock.requestPairingCode(number);
       console.log(`🔑 Pairing code for ${number}: ${code}`);
 
-      res.json({
+      return res.json({
         status: "pending",
         pairingCode: code,
-        message: "Open WhatsApp > Linked Devices > Enter code",
+        message: "Use this code in WhatsApp: Settings > Linked Devices",
       });
     } else {
-      res.status(409).json({ error: "Already linked" });
+      return res.status(409).json({ error: "Already linked" });
     }
   } catch (err) {
-    console.error("❌ Error:", err);
-    res.status(500).json({ error: "Session failed", detail: err.message });
+    console.error("❌ Failed to pair:", err);
+    res.status(500).json({
+      error: "Session failed",
+      detail: err.message || "Unknown",
+    });
   }
 });
 
