@@ -1,4 +1,4 @@
-// router.js — Lord Rahl Session Generator using temp directory
+// router.js — Lord Rahl Session Generator using /temp
 const express = require("express");
 const { makeid } = require("./gen-id");
 const {
@@ -21,7 +21,7 @@ router.get("/pair", async (req, res) => {
   }
 
   const sessionId = makeid(5); // e.g. "H1zGp"
-  const sessionDir = path.join(__dirname, "temp", sessionId); // ✅ uses temp
+  const sessionDir = path.join(__dirname, "temp", sessionId); // ✅ using temp folder
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
   try {
@@ -39,6 +39,7 @@ router.get("/pair", async (req, res) => {
 
     sock.ev.on("connection.update", async (update) => {
       if (update.connection === "open") {
+        // ✅ Session created successfully
         const sessionData = {
           creds: state.creds,
           keys: state.keys,
@@ -46,7 +47,7 @@ router.get("/pair", async (req, res) => {
 
         const sessionString = Buffer.from(JSON.stringify(sessionData)).toString("base64");
         const finalSession = `LORD-RAHL~${sessionId}#${sessionString}`;
-        const sessionFilePath = path.join(__dirname, "temp", `${sessionId}.txt`); // ✅ also saves in temp
+        const sessionFilePath = path.join(__dirname, "temp", `${sessionId}.txt`); // ✅ save in temp
         fs.writeFileSync(sessionFilePath, finalSession);
 
         console.log("✅ LORD-RAHL session created.");
