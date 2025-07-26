@@ -1,4 +1,4 @@
-// router.js — Lord Rahl Session Generator + DM Delivery
+// router.js — Lord Rahl Session Generator
 const express = require("express");
 const { makeid } = require("./gen-id");
 const {
@@ -20,7 +20,7 @@ router.get("/pair", async (req, res) => {
     return res.status(400).json({ error: "Invalid number" });
   }
 
-  const sessionId = makeid(5); // e.g. "XyZ12"
+  const sessionId = makeid(5);
   const sessionDir = path.join(__dirname, "session", sessionId);
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
@@ -35,11 +35,14 @@ router.get("/pair", async (req, res) => {
       logger: pino({ level: "silent" }),
     });
 
+    // Save credentials
     sock.ev.on("creds.update", saveCreds);
 
-    // 🔁 Listen for connection status
+    // Connection updates
     sock.ev.on("connection.update", async (update) => {
-      if (update.connection === "open") {
+      const { connection } = update;
+
+      if (connection === "open") {
         const sessionData = {
           creds: state.creds,
           keys: state.keys,
@@ -48,40 +51,45 @@ router.get("/pair", async (req, res) => {
         const sessionString = Buffer.from(JSON.stringify(sessionData)).toString("base64");
         const finalSession = `LORD-RAHL~${sessionId}#${sessionString}`;
 
-        // 💾 Save to file
         const sessionFilePath = path.join(__dirname, "session", `${sessionId}.txt`);
         fs.writeFileSync(sessionFilePath, finalSession);
 
-        // 📲 Send to WhatsApp DM
-        const jid = `${number}@s.whatsapp.net`;
-        await sock.sendMessage(jid, {
-          text: `🔐 *Your LORD-RAHL Session*\n\n${finalSession}\n\nPaste it into your bot.`,
-        });
+        console.log("✅ LORD-RAHL session created.");
 
-        console.log("✅ Session sent to WhatsApp.");
+        return res.json({
+          status: "connected",
+          session: finalSession,
+          message: "Paste this session into your bot",
+        });
+      }
+
+      if (connection === "close") {
+        console.log("❌ Connection closed");
       }
     });
 
-    // 🧪 Generate pairing code
+    // Pairing code
     if (!sock.authState.creds.registered) {
-      await delay(1500);
+      await delay(2500); // Give Baileys time to be ready
       const code = await sock.requestPairingCode(number);
-      console.log(`🔑 Pairing code for ${number}: ${code}`);
+      console.log(`🔑 Code for ${number}: ${code}`);
 
       return res.json({
         status: "pending",
         pairingCode: code,
-        message: "Use this code in WhatsApp: Settings > Linked Devices",
+        message: "Paste this code into WhatsApp: Linked Devices",
       });
     } else {
       return res.status(409).json({ error: "Already linked" });
     }
 
+    // Keep socket alive
+    await new Promise(() => {});
   } catch (err) {
-    console.error("❌ Error during session generation:", err);
+    console.error("❌ Failed to pair:", err);
     res.status(500).json({
       error: "Session failed",
-      detail: err.message || "Unknown error",
+      detail: err.message || "Unknown",
     });
   }
 });
